@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { createResourceSchema } from "../types/resource.validatior.js";
 import User from "../models/user.model.js";
 import Resource from '../models/resource.model.js';
-import { extractTextFromPdf } from '../utils/pdfUtils.js';
+import { extractTextFromPdf } from '../utils/extractText.js';
 import { geminiSummarize } from '../utils/geminiUtils.js';
 
 

@@ -5,7 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);  // Store API 
 export async function geminiSummarize(text) {
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-  const prompt = `Summarize the following document text: \n${text}\n\nSummary:`;
+  const prompt = `Explain the following text in a way that is easy to understand: \n${text}\n\nSummary:`;
 
   const result = await model.generateContent(prompt);
 
