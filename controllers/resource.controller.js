@@ -4,7 +4,7 @@ import mongoose from "mongoose";
 import { createResourceSchema } from "../types/resource.validatior.js";
 import User from "../models/user.model.js";
 import Resource from '../models/resource.model.js';
-import { extractTextFromPdf } from '../utils/extractText.js';
+import { extractText } from '../utils/extractor.js';
 import { geminiSummarize } from '../utils/geminiUtils.js';
 
 
@@ -334,7 +334,7 @@ export const extractDocumentText = async (req, res) => {
     }
     console.log("hello")
     // 2. Extract text from the PDF URL
-    const extractedText = await extractTextFromPdf(resource.link);
+    const extractedText = await extractText(resource.link);
 
     // 3. Send the successful response
     res.status(200).json({
@@ -362,7 +362,7 @@ export const summarizeDocumentGemini = async (req, res) => {
     if (!resource || resource.type !== 'Document')
       return res.status(404).json({ message: 'Document resource not found.' });
 
-    const text = await extractTextFromPdf(resource.link);
+    const text = await extractText(resource.link);
     // 2. Summarize with Gemini
     const summary = await geminiSummarize(text.slice(0, 8000)); // Gemini has input limits
     // 3. (Optional) Save summary to resource

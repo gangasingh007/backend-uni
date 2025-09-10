@@ -10,6 +10,5 @@ export async function geminiSummarize(text) {
   const result = await model.generateContent(prompt);
 
   // Use `.response?.candidates[0]?.content?.parts[0]?.text` to get summary, or adjust based on Gemini response shape
-  console.log(result?.response?.candidates?.[0]?.content?.parts?.[0]?.text);
   return result?.response?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 }
