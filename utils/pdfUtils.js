@@ -21,7 +21,7 @@ const getDirectGoogleDriveUrl = (url) => {
  * @param {string} pdfUrl - The public URL of the PDF file.
  * @returns {Promise<string>} A promise that resolves to the extracted text.
  */
-export const extractTextFromPdf = async (pdfUrl) => {
+export const extractText = async (pdfUrl) => {
   if (!pdfUrl || !pdfUrl.toLowerCase().startsWith('http')) {
     throw new Error('Invalid PDF URL provided. Must be an absolute web address.');
   }
