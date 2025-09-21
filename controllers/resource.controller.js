@@ -4,8 +4,8 @@ import mongoose from "mongoose";
 import { createResourceSchema } from "../types/resource.validatior.js";
 import User from "../models/user.model.js";
 import Resource from '../models/resource.model.js';
-import { extractText } from '../utils/pdfUtils.js';
-import { geminiSummarize } from '../utils/geminiUtils.js';
+import { extractText } from '../utils/extractor.js';
+import {  groqSummarize  } from '../utils/geminiUtils.js';
 
 
 export const createYtresource = async (req, res) => {
@@ -364,7 +364,7 @@ export const summarizeDocumentGemini = async (req, res) => {
 
     const text = await extractText(resource.link);
     // 2. Summarize with Gemini
-    const summary = await geminiSummarize(text.slice(0, 8000)); // Gemini has input limits
+    const summary = await groqSummarize(text.slice(0, 8000)); // Gemini has input limits
     // 3. (Optional) Save summary to resource
     await Resource.findByIdAndUpdate(resourceId, { summary });
 

@@ -2,55 +2,59 @@ import axios from 'axios';
 import * as pdfjsLib from 'pdfjs-dist/legacy/build/pdf.mjs';
 import mammoth from 'mammoth';
 
-/**
- * Extracts text from a publicly accessible PDF, DOCX, or Google Docs document.
- * It automatically detects the source and handles the URL accordingly.
- *
- * @param {string} fileUrl - The public URL of the PDF, DOCX, or Google Doc.
- * @returns {Promise<string>} A promise that resolves to the extracted text.
- */
 export const extractText = async (fileUrl) => {
   if (!fileUrl || !fileUrl.toLowerCase().startsWith('http')) {
     throw new Error('Invalid URL provided. Must be an absolute web address.');
   }
 
   let directUrl = fileUrl;
-  let extension = '';
+  let isGoogleDrive = false; // Flag to check if we need to inspect headers
 
-  // --- NEW LOGIC TO HANDLE DIFFERENT URL TYPES ---
-  // 1. Check for a Google Docs URL
   const gdocsMatch = fileUrl.match(/docs\.google\.com\/document\/d\/([a-zA-Z0-9_-]+)/);
+  const gdriveMatch = fileUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
+
   if (gdocsMatch && gdocsMatch[1]) {
     const fileId = gdocsMatch[1];
-    // Force export as a .docx file
     directUrl = `https://docs.google.com/document/d/${fileId}/export?format=docx`;
-    extension = 'docx'; // Manually set the extension for the parser
+  } else if (gdriveMatch && gdriveMatch[1]) {
+    const fileId = gdriveMatch[1];
+    directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    isGoogleDrive = true; // Mark this as a GDrive link
   }
-  // 2. Check for a Google Drive URL (for files uploaded to Drive)
-  else {
-    const gdriveMatch = fileUrl.match(/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if (gdriveMatch && gdriveMatch[1]) {
-      const fileId = gdriveMatch[1];
-      directUrl = `https://drive.google.com/uc?export=download&id=${fileId}`;
-      // For Drive, we still need to guess the extension from the original URL
-      extension = new URL(fileUrl).pathname.split('.').pop().toLowerCase();
-    }
-    // 3. Handle a standard URL
-    else {
-      extension = new URL(fileUrl).pathname.split('.').pop().toLowerCase();
-    }
-  }
-  // --- END OF NEW LOGIC ---
 
   try {
-    // Download the file as a buffer
     const response = await axios.get(directUrl, {
       responseType: 'arraybuffer'
     });
+    
+    let extension;
+
+    // --- NEW LOGIC: Determine extension after download ---
+    if (isGoogleDrive) {
+      const contentDisposition = response.headers['content-disposition'];
+      if (contentDisposition) {
+        // Extracts filename from the header, e.g., "filename=\"My Report.pdf\""
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          const filename = filenameMatch[1].replace(/['"]/g, '');
+          extension = filename.split('.').pop().toLowerCase();
+        }
+      }
+    } else if (gdocsMatch) {
+        extension = 'docx'; // Google Docs are exported as docx
+    } else {
+      // For direct URLs, get extension from the path
+      extension = new URL(fileUrl).pathname.split('.').pop().toLowerCase();
+    }
+    
+    if (!extension) {
+        throw new Error(`Could not determine file type for URL: ${fileUrl}`);
+    }
+    // --- END OF NEW LOGIC ---
+
     const fileDataBuffer = response.data;
     let fullText = '';
 
-    // Route to the correct parser based on the determined extension
     if (extension === 'pdf') {
       const pdfData = new Uint8Array(fileDataBuffer);
       const pdf = await pdfjsLib.getDocument({ data: pdfData }).promise;
@@ -60,16 +64,13 @@ export const extractText = async (fileUrl) => {
         const textContent = await page.getTextContent();
         fullText += textContent.items.map(item => item.str).join(' ') + '\n';
       }
-
     } else if (extension === 'docx') {
       const result = await mammoth.extractRawText({ buffer: fileDataBuffer });
       fullText = result.value;
-
     } else {
-      throw new Error(`Unsupported file type or extension not found for URL: ${fileUrl}`);
+      throw new Error(`Unsupported file type: .${extension}`);
     }
 
-    // Final cleanup and return
     if (!fullText.trim()) {
       throw new Error('Failed to extract readable text. The document might be empty or image-only.');
     }
