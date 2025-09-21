@@ -364,7 +364,7 @@ export const summarizeDocumentGemini = async (req, res) => {
 
     const text = await extractText(resource.link);
     // 2. Summarize with Gemini
-    const summary = await groqSummarize(text.slice(0, 8000)); // Gemini has input limits
+    const summary = await groqSummarize(text.slice(0,20000)); // Gemini has input limits
     // 3. (Optional) Save summary to resource
     await Resource.findByIdAndUpdate(resourceId, { summary });
 
