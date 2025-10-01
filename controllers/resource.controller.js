@@ -370,6 +370,6 @@ export const summarizeDocumentGemini = async (req, res) => {
 
     res.status(200).json({ message: 'Gemini summary generated.', summary });
   } catch (error) {
-    res.status(500).json({ message: 'Gemini summarization failed', error: error.message });
+    res.status(500).json({ message: 'Failed to extract the content', error: error.message });
   }
 };
