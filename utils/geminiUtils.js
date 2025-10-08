@@ -13,7 +13,7 @@ export async function getGroqChatCompletion(text) {
     messages: [
       {
         role: "user",
-        content: `${text}\n\nExplain the above text comprehensively in easy-to-understand language.`,
+        content: `${text}\n\nExplain the above text in detail with easy-to-understand language and examples.`,
       },
     ],
     model: "llama-3.1-8b-instant", 
