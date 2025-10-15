@@ -4,6 +4,7 @@ import classRouter from "./class.router.js"
 import subjectRouter from "./subject.routes.js"
 import resourceRouter from "./resource.routes.js"
 import statsRouter from "./stats.routes.js" 
+import reviewrouter from "./review.router.js"
 
 const router = express.Router();
 
@@ -12,5 +13,6 @@ router.use("/class",classRouter);
 router.use("/subject",subjectRouter)
 router.use("/resource",resourceRouter)
 router.use("/stats",statsRouter)
+router.use("/review",reviewrouter)
 
 export default router;
